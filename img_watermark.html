@@ -1,0 +1,194 @@
+
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>图片防盗水印生成</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<style>
+    *{
+        margin: 0;
+        padding: 0;
+        border: 0;
+        box-sizing: border-box;
+        outline: none;
+    }
+    input{
+        display: block;
+        width: 200px;
+        height: 40px;
+        border-radius: 5px;
+        border: 2px solid #333;
+        padding: 10px;
+        margin-top: 10px;
+    }
+    #imgbg{
+        font-size:14px;
+        text-align:center;
+        position:relative;
+        margin-top: 50px;
+        width: calc(100vw - 300px);
+        margin-left: 300px;
+        background-color: #fff;
+    }
+    .conf{
+        width: 300px;
+        height: 100vh;
+        position: fixed;
+        top: 0px;
+        left: 0px;
+        border-right: 1px solid #333;
+        padding-top: 25vh;
+    }
+    .img , .imgtext{
+        width: 300px;
+        position:absolute;
+        /*height: 300px;*/
+        
+        top:50px;
+        left: 50%;
+        margin-left: -150px;
+        overflow: hidden;
+    }
+    .img img{
+        width: 100%;
+        height: 100%;
+        display: block;
+        filter: opacity(100%);
+        /*filter: blur(2px);*/
+        border: 0.1px solid #e1e0e0;
+    }
+    .imgtext{
+        font-size: 18px;
+        font-weight: lighter;
+        color: #999;
+        /*opacity: 0.2;*/
+        filter: blur(1px);
+        /*letter-spacing: 0.2rem;*/
+        /*transform: skew(25deg, 25deg);*/
+        
+    }
+</style>
+</head>
+<body>
+<div id="byd" >
+    <div align="center" class="conf">
+        <img src="/favicon.ico" class="imgs" />
+        <input id="settext" type="text" value="" placeholder="输入水印文字" title="水印文字"/>
+        <input id="imgwidth" type="text" value="300" placeholder="宽" title="宽"/>
+        <input id="textcolor" type="color" value="#999999" title="文字颜色"/>
+        <input id="imgtm" type="range" value="100" min="10" max="100" style="padding:0;" title="透明度"/>
+        
+    </div>
+    <!--onclick="downimg('imgbg')"-->
+    <div id="imgbg" >
+        <div class="img">
+            <img src="/favicon.ico" />
+        </div>
+        <div class="imgtext" title="请自行截图保存">
+            
+        </div>
+    </div>
+</div>
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/html2canvas/1.4.1/html2canvas.min.js" type="application/javascript"></script>
+    <script type="text/javascript" charset="utf-8">
+        var text = document.getElementsByClassName("imgtext")['0'];
+        var img = document.querySelector('.img');
+        text.style.height = (img.clientWidth)+"px";
+        var imgs = document.querySelector('.img img');
+        // var img = document.querySelectorAll('.img img')['0'];
+        var settext = document.getElementById("settext");
+        var textcolor=document.getElementById("textcolor");
+        var imgtm=document.getElementById("imgtm");
+        var ACCEPT = ['image/jpg', 'image/png', 'image/jpeg','image/webp','image/x-icon']
+        var MAXSIZE = 1024 * 1024 * 100;
+        var MAXTIP = "100MB";
+        textcolor.onchange = function(e){
+            text.style.color=textcolor.value;
+        }
+        imgtm.onchange=function(e){
+            // alert(imgtm.value)
+            img.style.filter="opacity("+imgtm.value+"%)";
+        }
+        settext.onchange = function(e){
+            if(settext.value){
+                var tempstr = "";
+                var tempstrs = "";
+                for(var i=0; i<150; i++){
+                    //横向
+                    tempstr += "&nbsp;"+settext.value+"&nbsp;";
+                }
+                tempstr = "<p>"+ tempstr +"</p>";
+                for(var i=0; i<150; i++){
+                    //纵向
+                    tempstrs += tempstr;
+                }
+                //输出水印
+                text.innerHTML=tempstrs;
+            }
+        }
+        var imgwidth = document.getElementById("imgwidth");
+        imgwidth.onchange = function(e){
+            //宽度改变动态修改
+            text.style.width = imgwidth.value+"px";
+            img.style.width = imgwidth.value+"px";
+            imgs.style.width = imgwidth.value+"px";
+            text.style.height = (img.clientHeight)+"px";
+            
+            //动态修正容器位置
+            text.style.marginLeft= "-"+(imgwidth.value/2)+"px";
+            img.style.marginLeft= "-"+(imgwidth.value/2)+"px";
+        }
+        function downimg(id){
+            // 使用 html2canvas 将该 div 转换为图像
+            html2canvas(document.getElementById(id)).then(function(canvas) {
+                // 将图像的数据转换为 base64 编码的字符串
+                var image = canvas.toDataURL("image/jpeg");
+                // downpdf(image);
+                // 创建一个链接，将图像数据作为 href 属性值
+                var link = document.createElement("a");
+                link.href = image;
+                // 设置链接的下载属性，将图像保存为指定的文件名
+                link.download = "usercert.jpeg";
+                // 模拟点击链接，触发下载操作
+                link.click();
+            });
+        }
+        
+        var dragDropArea = document.getElementById('byd');
+        // 阻止浏览器默认打开拖放文件的行为
+        dragDropArea.addEventListener('dragover', function(event) {
+            event.preventDefault();
+        });
+        // 获取拖放文件的内容
+        dragDropArea.addEventListener('drop', function(event) {
+            event.preventDefault();
+            var file = event.dataTransfer.files[0];
+            // console.log(file)
+            var reader = new FileReader();
+            // 上传校验逻辑
+            if (!ACCEPT.includes(file.type)) {
+                console.log(`不支持[${file.type}]类型`);
+                return
+            }
+            if (file.size > MAXSIZE) {
+                console.log(`文件超${MAXTIP}`);
+                return
+            }
+            reader.onload = function(event) {
+                imgs.src=event.target.result;
+                setTimeout(function(){
+                    text.style.height = (img.clientHeight)+"px";
+                    // alert(text.style.height)
+                },500);
+                
+            };
+            reader.readAsDataURL(file);
+            return;
+            console.log(file.name,file.size,file.type);
+            
+           
+        });
+    </script>
+</body>
+</html>
