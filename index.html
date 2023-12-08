@@ -131,6 +131,9 @@
         }
         var imgwidth = document.getElementById("imgwidth");
         imgwidth.onchange = function(e){
+            if(!imgwidth.value){
+                return false;
+            }
             //宽度改变动态修改
             text.style.width = imgwidth.value+"px";
             img.style.width = imgwidth.value+"px";
