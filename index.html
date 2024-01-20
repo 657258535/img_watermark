@@ -136,10 +136,10 @@
                 return false;
             }
             //宽度改变动态修改
-            text.style.width = (imgwidth.value*2)+"px";
+            text.style.width =  `${imgwidth.value * 2}px`;
             img.style.width = imgwidth.value+"px";
             imgs.style.width = imgwidth.value+"px";
-            text.style.height = (img.clientHeight*2)+"px";
+            text.style.height =  `${img.clientHeight * 2}px`;
             
             //动态修正容器位置
             text.style.marginLeft= "-"+(imgwidth.value/2)+"px";
