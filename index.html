@@ -30,7 +30,6 @@
         width: calc(100vw - 300px);
         margin-left: 300px;
         background-color: #fff;
-        overflow:hidden;
     }
     .conf{
         width: 300px;
@@ -69,24 +68,24 @@
         filter: blur(1px);
         /*letter-spacing: 0.2rem;*/
         /*transform: skew(25deg, 25deg);*/
-        transform: rotate(45deg);
+        
     }
 </style>
 </head>
 <body>
 <div id="byd" >
     <div align="center" class="conf">
-        <img src="favicon.ico" class="imgs" alt=" "/>
+        <img src="/favicon.ico" class="imgs" />
         <input id="settext" type="text" value="" placeholder="水印(Text watermarks)" title="水印(Text watermarks)"/>
         <input id="imgwidth" type="text" value="300" placeholder="宽(Width)" title="宽(height)"/>
         <input id="textcolor" type="color" value="#999999" title="文字颜色(Text Color)"/>
-        <input id="imgtm" type="range" value="100" min="10" max="100" style="padding:0;" title="文字透明(Text Transparent)"/>
+        <input id="imgtm" type="range" value="100" min="10" max="100" style="padding:0;" title="透明(Transparent)"/>
         
     </div>
-    <!---->
-    <div id="imgbg" onclick="downimg('imgbg')">
+    <!--onclick="downimg('imgbg')"-->
+    <div id="imgbg" >
         <div class="img">
-            <img src="favicon.ico" alt=" "/>
+            <img src="/favicon.ico" />
         </div>
         <div class="imgtext" title="截图保存(Save the screenshot)">
             
@@ -111,7 +110,7 @@
         }
         imgtm.onchange=function(e){
             // alert(imgtm.value)
-            text.style.filter="opacity("+imgtm.value+"%)";
+            img.style.filter="opacity("+imgtm.value+"%)";
         }
         settext.onchange = function(e){
             if(settext.value){
@@ -136,10 +135,10 @@
                 return false;
             }
             //宽度改变动态修改
-            text.style.width =  `${imgwidth.value * 2}px`;
+            text.style.width = imgwidth.value+"px";
             img.style.width = imgwidth.value+"px";
             imgs.style.width = imgwidth.value+"px";
-            text.style.height =  `${img.clientHeight * 2}px`;
+            text.style.height = (img.clientHeight)+"px";
             
             //动态修正容器位置
             text.style.marginLeft= "-"+(imgwidth.value/2)+"px";
