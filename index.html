@@ -63,20 +63,24 @@
     }
     .imgtext{
         font-size: 18px;
-        font-weight: lighter;
+        font-weight: 800;
         color: #999;
         /*opacity: 0.2;*/
-        filter: blur(1px);
+        /* filter: blur(1px); */
         /*letter-spacing: 0.2rem;*/
         /*transform: skew(25deg, 25deg);*/
         
+    }
+    .imgtext p{
+        transform: rotate(45deg);
+
     }
 </style>
 </head>
 <body>
 <div id="byd" >
     <div align="center" class="conf">
-        <img src="/favicon.ico" class="imgs" />
+        <img src="favicon.ico" class="imgs" />
         <input id="settext" type="text" value="" placeholder="水印(Text watermarks)" title="水印(Text watermarks)"/>
         <input id="imgwidth" type="text" value="300" placeholder="宽(Width)" title="宽(height)"/>
         <input id="textcolor" type="color" value="#999999" title="文字颜色(Text Color)"/>
@@ -86,7 +90,7 @@
     <!--onclick="downimg('imgbg')"-->
     <div id="imgbg" >
         <div class="img">
-            <img src="/favicon.ico" />
+            <img src="favicon.ico" />
         </div>
         <div class="imgtext" title="截图保存(Save the screenshot)">
             
@@ -111,18 +115,18 @@
         }
         imgtm.onchange=function(e){
             // alert(imgtm.value)
-            img.style.filter="opacity("+imgtm.value+"%)";
+            text.style.filter="opacity("+imgtm.value+"%)";
         }
         settext.onchange = function(e){
             if(settext.value){
                 var tempstr = "";
                 var tempstrs = "";
-                for(var i=0; i<150; i++){
+                for(var i=0; i<250; i++){
                     //横向
                     tempstr += "&nbsp;"+settext.value+"&nbsp;";
                 }
                 tempstr = "<p>"+ tempstr +"</p>";
-                for(var i=0; i<150; i++){
+                for(var i=0; i<250; i++){
                     //纵向
                     tempstrs += tempstr;
                 }
