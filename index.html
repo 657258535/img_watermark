@@ -91,13 +91,16 @@
         
     </div>
     <!--onclick="downimg('imgbg')"-->
-    <div id="imgbg" onclick="downimg('imgtext')">
-        <div class="img">
-            <img src="favicon.ico" />
+    <div id="imgbg">
+        <div id="imgdata" onclick="downimg('imgdata')">
+            <div class="img">
+                <img src="favicon.ico" />
+            </div>
+            <div class="imgtext" id="imgtext" title="截图保存(Save the screenshot)">
+                
+            </div>
         </div>
-        <div class="imgtext" id="imgtext" title="截图保存(Save the screenshot)">
-            
-        </div>
+        
     </div>
 </div>
     <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/html2canvas/1.4.1/html2canvas.min.js" type="application/javascript"></script>
@@ -110,6 +113,7 @@
         var settext = document.getElementById("settext");
         var textcolor=document.getElementById("textcolor");
         var imgtm=document.getElementById("imgtm");
+        var imgdata = getElementById("imgdata");
         var ACCEPT = ['image/jpg', 'image/png', 'image/jpeg','image/webp','image/x-icon']
         var MAXSIZE = 1024 * 1024 * 100;
         var MAXTIP = "100MB";
@@ -146,6 +150,7 @@
             text.style.width = imgwidth.value+"px";
             img.style.width = imgwidth.value+"px";
             imgs.style.width = imgwidth.value+"px";
+            imgdata.style.width=imgwidth.value+"px";
             text.style.height = (img.clientHeight)+"px";
             
             //动态修正容器位置
