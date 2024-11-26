@@ -113,7 +113,7 @@
         var settext = document.getElementById("settext");
         var textcolor=document.getElementById("textcolor");
         var imgtm=document.getElementById("imgtm");
-        var imgdata = getElementById("imgdata");
+        var imgdatas = document.getElementById("imgdata");
         var ACCEPT = ['image/jpg', 'image/png', 'image/jpeg','image/webp','image/x-icon']
         var MAXSIZE = 1024 * 1024 * 100;
         var MAXTIP = "100MB";
@@ -150,7 +150,7 @@
             text.style.width = imgwidth.value+"px";
             img.style.width = imgwidth.value+"px";
             imgs.style.width = imgwidth.value+"px";
-            imgdata.style.width=imgwidth.value+"px";
+            imgdatas.style.width=imgwidth.value+"px";
             text.style.height = (img.clientHeight)+"px";
             
             //动态修正容器位置
@@ -161,13 +161,13 @@
             // 使用 html2canvas 将该 div 转换为图像
             html2canvas(document.getElementById(id)).then(function(canvas) {
                 // 将图像的数据转换为 base64 编码的字符串
-                var image = canvas.toDataURL("image/jpeg");
+                var image = canvas.toDataURL("image/png");
                 // downpdf(image);
                 // 创建一个链接，将图像数据作为 href 属性值
                 var link = document.createElement("a");
                 link.href = image;
                 // 设置链接的下载属性，将图像保存为指定的文件名
-                link.download = "usercert.jpeg";
+                link.download = "usercert.png";
                 // 模拟点击链接，触发下载操作
                 link.click();
             });
