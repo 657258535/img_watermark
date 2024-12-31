@@ -119,38 +119,37 @@
 
     // 下载单个画布
     function downloadCanvas() {
-        return new Promise((resolve) => {
             const link = document.createElement('a');
             link.download = 'watermarked-image.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
-            setTimeout(resolve, 500); // 确保下载动作完成
-        });
+            return true;
     }
 
     // 拖放上传事件处理
     async function handleFiles(files) {
         for (const file of files) {
             if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
+                const reader = await new FileReader();
                 reader.onload = async () => {
-                    image.src = reader.result;
+                    image.src = await reader.result;
                     await new Promise((resolve) => {
-                        image.onload = () => {
-                            setWidth.value = image.width;
-                            drawCanvas();
-                            resolve();
+                        image.onload = async () => {
+                            setWidth.value = await image.width;
+                            await drawCanvas();
+                            await resolve();
                         };
                     });
 
                     if (autoDownloadEnabled) {
-                        await downloadCanvas();
+                        await downloadCanvas(); // 每张图片处理完成后立即下载
                     }
                 };
-                reader.readAsDataURL(file);
-                await new Promise((resolve) => setTimeout(resolve, 500)); // 防止冲突
+                await reader.readAsDataURL(file);
+                await new Promise((resolve) => setTimeout(resolve, 5000)); // 防止冲突
             }
         }
+        alert('批量水印图片处理完成');
     }
 
     // 注册事件监听器
