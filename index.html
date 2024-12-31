@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>图片防盗水印 (Image Watermarks)</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
 <style>
     * {
         margin: 0;
@@ -17,18 +17,23 @@
         top: 2.5vh;
         left: 0;
         background-color: #222;
-        padding-top: 25vh;
+        padding-top: 20px;
         border-radius: 15px;
         text-align: center;
         color: white;
     }
-    input {
+    input, button {
         display: block;
         width: 200px;
         margin: 10px auto;
         padding: 10px;
         border-radius: 5px;
         border: 2px solid #333;
+    }
+    button {
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
     }
     #canvas-container {
         margin-left: 320px;
@@ -37,44 +42,43 @@
     canvas {
         border: 1px solid #ddd;
     }
-    #downloadBtn{
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-    }
 </style>
 </head>
 <body>
 <div class="conf">
-    <input id="setText" type="text" placeholder="水印文本 (Text)" />
-    <input id="setColor" type="color" value="#999999" />
-    <input id="setOpacity" type="range" min="0.1" max="1" step="0.1" value="1" />
-    <input id="setWidth" type="number" value="300" placeholder="宽度 (Width)" />
+    <input id="setText" type="text" placeholder="水印文本 (Text)" title="水印文字">
+    <input id="setWidth" type="number" value="300" placeholder="宽度 (Width)" title="图片宽度">
+    <input id="setColor" type="color" value="#999999" title="文字颜色">
+    <input id="setOpacity" type="range" min="0.1" max="1" step="0.1" value="1" title="文字透明度">
+    <input id="setAngle" type="range" min="-90" max="90" step="1" value="0" title="文字倾斜角度 (Angle)">
     <button id="downloadBtn">下载图片 (Download)</button>
 </div>
 <div id="canvas-container">
-    <canvas id="watermarkCanvas" width="500" height="500"></canvas>
+    <canvas id="watermarkCanvas"></canvas>
 </div>
 <script>
     const canvas = document.getElementById('watermarkCanvas');
     const ctx = canvas.getContext('2d');
     const setText = document.getElementById('setText');
+    const setWidth = document.getElementById('setWidth');
     const setColor = document.getElementById('setColor');
     const setOpacity = document.getElementById('setOpacity');
-    const setWidth = document.getElementById('setWidth');
+    const setAngle = document.getElementById('setAngle');
     const downloadBtn = document.getElementById('downloadBtn');
 
     let image = new Image();
-    image.src = 'favicon.ico'; // 默认图片
-    image.onload = () => drawCanvas();
 
     function drawCanvas() {
         // 清空画布
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 调整画布大小
-        canvas.width = parseInt(setWidth.value) || 500;
-        canvas.height = (canvas.width / image.width) * image.height;
+        // 设置画布大小
+        const width = parseInt(setWidth.value);
+        canvas.width = width;
+        canvas.height = (width / image.width) * image.height;
+
+        // 更新输入框宽度
+        setText.style.width = setWidth.value;
 
         // 绘制图片
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
@@ -85,20 +89,33 @@
             ctx.font = '20px Arial';
             ctx.fillStyle = setColor.value;
 
+            const angle = (parseInt(setAngle.value) * Math.PI) / 180; // 转换为弧度
             const text = setText.value;
             const textWidth = ctx.measureText(text).width;
-            const rows = Math.ceil(canvas.height / 50); // 水印行数
-            const cols = Math.ceil(canvas.width / (textWidth + 20)); // 水印列数
+            const textHeight = 30; // 假设文字高度为30px
 
-            for (let i = 0; i < rows; i++) {
-                for (let j = 0; j < cols; j++) {
+            // 确定覆盖范围：图片对角线长度的两倍
+            const diagonal = Math.sqrt(canvas.width ** 2 + canvas.height ** 2) * 2;
+
+            // 计算行数和列数
+            const rows = Math.ceil(diagonal / (textHeight + 20));
+            const cols = Math.ceil(diagonal / (textWidth + 20));
+
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2); // 移动到中心
+            ctx.rotate(angle); // 应用旋转
+
+            // 绘制水印
+            for (let i = -rows; i <= rows; i++) {
+                for (let j = -cols; j <= cols; j++) {
                     ctx.fillText(
                         text,
-                        j * (textWidth + 20), // 水平方向
-                        i * 50 + 25 // 垂直方向
+                        j * (textWidth + 20) - diagonal / 2, // 水平方向
+                        i * (textHeight + 20) - diagonal / 2 // 垂直方向
                     );
                 }
             }
+            ctx.restore();
             ctx.globalAlpha = 1.0;
         }
     }
@@ -106,14 +123,17 @@
     // 更新水印文字
     setText.addEventListener('input', drawCanvas);
 
+    // 更新图片宽度
+    setWidth.addEventListener('input', drawCanvas);
+
     // 更新颜色
     setColor.addEventListener('input', drawCanvas);
 
     // 更新透明度
     setOpacity.addEventListener('input', drawCanvas);
 
-    // 更新宽度
-    setWidth.addEventListener('input', drawCanvas);
+    // 更新文字倾斜角度
+    setAngle.addEventListener('input', drawCanvas);
 
     // 下载图片
     downloadBtn.addEventListener('click', () => {
@@ -123,16 +143,19 @@
         link.click();
     });
 
-    // 支持拖放上传图片
-    canvas.addEventListener('dragover', (e) => e.preventDefault());
-    canvas.addEventListener('drop', (e) => {
+    // 支持拖放上传图片到整个页面
+    document.body.addEventListener('dragover', (e) => e.preventDefault());
+    document.body.addEventListener('drop', (e) => {
         e.preventDefault();
         const file = e.dataTransfer.files[0];
         if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = () => {
                 image.src = reader.result;
-                image.onload = drawCanvas;
+                image.onload = () => {
+                    setWidth.value = image.width; // 设置宽度输入框为图片宽度
+                    drawCanvas();
+                };
             };
             reader.readAsDataURL(file);
         }
