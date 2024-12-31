@@ -163,7 +163,7 @@
     autoDownload.addEventListener('change', (e) => {
         autoDownloadEnabled = e.target.checked;
     });
-
+    // 拖放上传事件
     document.body.addEventListener('dragover', (e) => e.preventDefault());
     document.body.addEventListener('drop', (e) => {
         e.preventDefault();
