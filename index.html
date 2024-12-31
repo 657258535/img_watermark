@@ -1,208 +1,137 @@
-
-
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>图片防盗水印(Image watermarks)</title>
+<title>图片防盗水印 (Image Watermarks)</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
 <style>
-    *{
+    * {
         margin: 0;
         padding: 0;
-        border: 0;
         box-sizing: border-box;
-        outline: none;
     }
-    .imgs{
-        transition:all .7s ease-in-out
-    }
-    .imgs:hover{
-        transform: scale(1.1) rotate(360deg);
-    }
-    input{
-        display: block;
-        width: 200px;
-        height: 40px;
-        border-radius: 5px;
-        border: 2px solid #333;
-        padding: 10px;
-        margin-top: 10px;
-    }
-    #imgbg{
-        font-size:14px;
-        text-align:center;
-        position:relative;
-        margin-top: 50px;
-        width: calc(100vw - 300px);
-        margin-left: 300px;
-        background-color: #fff;
-    }
-    .conf{
+    .conf {
         width: 300px;
         height: 95vh;
         position: fixed;
         top: 2.5vh;
-        left: 0px;
-        border: 5px solid #333;
-        padding-top: 25vh;
+        left: 0;
         background-color: #222;
+        padding-top: 25vh;
         border-radius: 15px;
+        text-align: center;
+        color: white;
     }
-    .img , .imgtext{
-        width: 300px;
-        position:absolute;
-        top:50px;
-        left: 50%;
-        margin-left: -150px;
-        overflow: hidden;
-
-    }
-    .img img{
-        width: 100%;
-        height: 100%;
+    input {
         display: block;
-        filter: opacity(100%);
-        border: 0.1px solid #e1e0e0;
+        width: 200px;
+        margin: 10px auto;
+        padding: 10px;
+        border-radius: 5px;
+        border: 2px solid #333;
     }
-    .imgtext{
-        font-size: 18px;
-        font-weight: 800;
-        color: #999;
-        letter-spacing: 3px;
-        white-space: nowrap;
+    #canvas-container {
+        margin-left: 320px;
+        padding: 20px;
     }
-    .imgtext p{
-        /* transform: rotate(45deg); */
-        margin-left: -200px;
-        line-height: 50px;
-        height: 50px;
+    canvas {
+        border: 1px solid #ddd;
     }
 </style>
 </head>
 <body>
-<div id="byd" >
-    <div align="center" class="conf">
-        <img src="favicon.ico" class="imgs" />
-        <input id="settext" type="text" value="" placeholder="水印(Text watermarks)" title="水印(Text watermarks)"/>
-        <input id="imgwidth" type="text" value="300" placeholder="宽(Width)" title="宽(height)"/>
-        <input id="textcolor" type="color" value="#999999" title="文字颜色(Text Color)"/>
-        <input id="imgtm" type="range" value="100" min="10" max="100" style="padding:0;" title="透明(Transparent)"/>
-        
-    </div>
-    <!--onclick="downimg('imgbg')"-->
-    <div id="imgbg">
-            <div class="img">
-                <img src="favicon.ico" />
-            </div>
-            <div class="imgtext" id="imgtext" title="截图保存(Save the screenshot)">
-                
-            </div>
-        
-    </div>
+<div class="conf">
+    <input id="setText" type="text" placeholder="水印文本 (Text)" />
+    <input id="setColor" type="color" value="#999999" />
+    <input id="setOpacity" type="range" min="0.1" max="1" step="0.1" value="1" />
+    <input id="setWidth" type="number" value="300" placeholder="宽度 (Width)" />
+    <button id="downloadBtn">下载图片 (Download)</button>
 </div>
-    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/html2canvas/1.4.1/html2canvas.min.js" type="application/javascript"></script>
-    <script type="text/javascript" charset="utf-8">
-        var text = document.getElementsByClassName("imgtext")['0'];
-        var img = document.querySelector('.img');
-        text.style.height = (img.clientWidth)+"px";
-        var imgs = document.querySelector('.img img');
-        // var img = document.querySelectorAll('.img img')['0'];
-        var settext = document.getElementById("settext");
-        var textcolor=document.getElementById("textcolor");
-        var imgtm=document.getElementById("imgtm");
-        var ACCEPT = ['image/jpg', 'image/png', 'image/jpeg','image/webp','image/x-icon']
-        var MAXSIZE = 1024 * 1024 * 100;
-        var MAXTIP = "100MB";
-        textcolor.onchange = function(e){
-            text.style.color=textcolor.value;
-        }
-        imgtm.onchange=function(e){
-            // alert(imgtm.value)
-            text.style.filter="opacity("+imgtm.value+"%)";
-        }
-        settext.onchange = function(e){
-            if(settext.value){
-                var tempstr = "";
-                var tempstrs = "";
-                for(var i=0; i<250; i++){
-                    //横向
-                    tempstr += "&nbsp;"+settext.value+"&nbsp;";
+<div id="canvas-container">
+    <canvas id="watermarkCanvas" width="500" height="500"></canvas>
+</div>
+<script>
+    const canvas = document.getElementById('watermarkCanvas');
+    const ctx = canvas.getContext('2d');
+    const setText = document.getElementById('setText');
+    const setColor = document.getElementById('setColor');
+    const setOpacity = document.getElementById('setOpacity');
+    const setWidth = document.getElementById('setWidth');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    let image = new Image();
+    image.src = 'favicon.ico'; // 默认图片
+    image.onload = () => drawCanvas();
+
+    function drawCanvas() {
+        // 清空画布
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 调整画布大小
+        canvas.width = parseInt(setWidth.value) || 500;
+        canvas.height = (canvas.width / image.width) * image.height;
+
+        // 绘制图片
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        // 添加水印
+        if (setText.value) {
+            ctx.globalAlpha = parseFloat(setOpacity.value);
+            ctx.font = '20px Arial';
+            ctx.fillStyle = setColor.value;
+
+            const text = setText.value;
+            const textWidth = ctx.measureText(text).width;
+            const rows = Math.ceil(canvas.height / 50); // 水印行数
+            const cols = Math.ceil(canvas.width / (textWidth + 20)); // 水印列数
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    ctx.fillText(
+                        text,
+                        j * (textWidth + 20), // 水平方向
+                        i * 50 + 25 // 垂直方向
+                    );
                 }
-                tempstr = "<p>"+ tempstr +"</p>";
-                for(var i=0; i<250; i++){
-                    //纵向
-                    tempstrs += tempstr;
-                }
-                //输出水印
-                text.innerHTML=tempstrs;
             }
+            ctx.globalAlpha = 1.0;
         }
-        var imgwidth = document.getElementById("imgwidth");
-        imgwidth.onchange = function(e){
-            if(!imgwidth.value){
-                return false;
-            }
-            //宽度改变动态修改
-            text.style.width = imgwidth.value+"px";
-            img.style.width = imgwidth.value+"px";
-            imgs.style.width = imgwidth.value+"px";
-            text.style.height = (img.clientHeight)+"px";
-            
-            //动态修正容器位置
-            text.style.marginLeft= "-"+(imgwidth.value/2)+"px";
-            img.style.marginLeft= "-"+(imgwidth.value/2)+"px";
-        }
-        function downimg(id){
-            // 使用 html2canvas 将该 div 转换为图像
-            html2canvas(document.getElementById(id)).then(function(canvas) {
-                // 将图像的数据转换为 base64 编码的字符串
-                var image = canvas.toDataURL("image/png");
-                // downpdf(image);
-                // 创建一个链接，将图像数据作为 href 属性值
-                var link = document.createElement("a");
-                link.href = image;
-                // 设置链接的下载属性，将图像保存为指定的文件名
-                link.download = "usercert.png";
-                // 模拟点击链接，触发下载操作
-                link.click();
-            });
-        }
-        
-        var dragDropArea = document.getElementById('byd');
-        // 阻止浏览器默认打开拖放文件的行为
-        dragDropArea.addEventListener('dragover', function(event) {
-            event.preventDefault();
-        });
-        // 获取拖放文件的内容
-        dragDropArea.addEventListener('drop', function(event) {
-            event.preventDefault();
-            var file = event.dataTransfer.files[0];
-            // console.log(file)
-            var reader = new FileReader();
-            // 上传校验逻辑
-            if (!ACCEPT.includes(file.type)) {
-                console.log(`不支持[${file.type}]类型`);
-                return
-            }
-            if (file.size > MAXSIZE) {
-                console.log(`文件超${MAXTIP}`);
-                return
-            }
-            reader.onload = function(event) {
-                imgs.src=event.target.result;
-                setTimeout(function(){
-                    text.style.height = (img.clientHeight)+"px";
-                    // alert(text.style.height)
-                },500);
-                
+    }
+
+    // 更新水印文字
+    setText.addEventListener('input', drawCanvas);
+
+    // 更新颜色
+    setColor.addEventListener('input', drawCanvas);
+
+    // 更新透明度
+    setOpacity.addEventListener('input', drawCanvas);
+
+    // 更新宽度
+    setWidth.addEventListener('input', drawCanvas);
+
+    // 下载图片
+    downloadBtn.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'watermarked-image.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
+
+    // 支持拖放上传图片
+    canvas.addEventListener('dragover', (e) => e.preventDefault());
+    canvas.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                image.src = reader.result;
+                image.onload = drawCanvas;
             };
             reader.readAsDataURL(file);
-            return;
-            console.log(file.name,file.size,file.type);
-            
-           
-        });
-    </script>
+        }
+    });
+</script>
 </body>
-</html> 
+</html>
