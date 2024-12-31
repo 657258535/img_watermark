@@ -22,7 +22,7 @@
         text-align: center;
         color: white;
     }
-    input, button {
+    input, button, label {
         display: block;
         width: 200px;
         margin: 10px auto;
@@ -51,6 +51,9 @@
     <input id="setColor" type="color" value="#999999" title="文字颜色">
     <input id="setOpacity" type="range" min="0.1" max="1" step="0.1" value="1" title="文字透明度">
     <input id="setAngle" type="range" min="-90" max="90" step="1" value="0" title="文字倾斜角度 (Angle)">
+    <label>
+        <input id="autoDownload" type="checkbox"> 自动下载 (Auto Download)
+    </label>
     <button id="downloadBtn">下载图片 (Download)</button>
 </div>
 <div id="canvas-container">
@@ -64,54 +67,48 @@
     const setColor = document.getElementById('setColor');
     const setOpacity = document.getElementById('setOpacity');
     const setAngle = document.getElementById('setAngle');
+    const autoDownload = document.getElementById('autoDownload');
     const downloadBtn = document.getElementById('downloadBtn');
 
     let image = new Image();
+    let autoDownloadEnabled = false;
 
+    // 更新画布和绘制水印
     function drawCanvas() {
-        // 清空画布
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 设置画布大小
         const width = parseInt(setWidth.value);
         canvas.width = width;
         canvas.height = (width / image.width) * image.height;
 
-        // 更新输入框宽度
         setText.style.width = setWidth.value;
 
-        // 绘制图片
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-        // 添加水印
         if (setText.value) {
             ctx.globalAlpha = parseFloat(setOpacity.value);
             ctx.font = '20px Arial';
             ctx.fillStyle = setColor.value;
 
-            const angle = (parseInt(setAngle.value) * Math.PI) / 180; // 转换为弧度
+            const angle = (parseInt(setAngle.value) * Math.PI) / 180;
             const text = setText.value;
             const textWidth = ctx.measureText(text).width;
-            const textHeight = 30; // 假设文字高度为30px
-
-            // 确定覆盖范围：图片对角线长度的两倍
+            const textHeight = 30;
             const diagonal = Math.sqrt(canvas.width ** 2 + canvas.height ** 2) * 2;
 
-            // 计算行数和列数
             const rows = Math.ceil(diagonal / (textHeight + 20));
             const cols = Math.ceil(diagonal / (textWidth + 20));
 
             ctx.save();
-            ctx.translate(canvas.width / 2, canvas.height / 2); // 移动到中心
-            ctx.rotate(angle); // 应用旋转
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(angle);
 
-            // 绘制水印
             for (let i = -rows; i <= rows; i++) {
                 for (let j = -cols; j <= cols; j++) {
                     ctx.fillText(
                         text,
-                        j * (textWidth + 20) - diagonal / 2, // 水平方向
-                        i * (textHeight + 20) - diagonal / 2 // 垂直方向
+                        j * (textWidth + 20) - diagonal / 2,
+                        i * (textHeight + 20) - diagonal / 2
                     );
                 }
             }
@@ -120,45 +117,59 @@
         }
     }
 
-    // 更新水印文字
+    // 下载单个画布
+    function downloadCanvas() {
+        return new Promise((resolve) => {
+            const link = document.createElement('a');
+            link.download = 'watermarked-image.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            setTimeout(resolve, 500); // 确保下载动作完成
+        });
+    }
+
+    // 拖放上传事件处理
+    async function handleFiles(files) {
+        for (const file of files) {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    image.src = reader.result;
+                    await new Promise((resolve) => {
+                        image.onload = () => {
+                            setWidth.value = image.width;
+                            drawCanvas();
+                            resolve();
+                        };
+                    });
+
+                    if (autoDownloadEnabled) {
+                        await downloadCanvas();
+                    }
+                };
+                reader.readAsDataURL(file);
+                await new Promise((resolve) => setTimeout(resolve, 500)); // 防止冲突
+            }
+        }
+    }
+
+    // 注册事件监听器
     setText.addEventListener('input', drawCanvas);
-
-    // 更新图片宽度
     setWidth.addEventListener('input', drawCanvas);
-
-    // 更新颜色
     setColor.addEventListener('input', drawCanvas);
-
-    // 更新透明度
     setOpacity.addEventListener('input', drawCanvas);
-
-    // 更新文字倾斜角度
     setAngle.addEventListener('input', drawCanvas);
 
-    // 下载图片
-    downloadBtn.addEventListener('click', () => {
-        const link = document.createElement('a');
-        link.download = 'watermarked-image.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+    downloadBtn.addEventListener('click', downloadCanvas);
+    autoDownload.addEventListener('change', (e) => {
+        autoDownloadEnabled = e.target.checked;
     });
 
-    // 支持拖放上传图片到整个页面
     document.body.addEventListener('dragover', (e) => e.preventDefault());
     document.body.addEventListener('drop', (e) => {
         e.preventDefault();
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                image.src = reader.result;
-                image.onload = () => {
-                    setWidth.value = image.width; // 设置宽度输入框为图片宽度
-                    drawCanvas();
-                };
-            };
-            reader.readAsDataURL(file);
-        }
+        const files = Array.from(e.dataTransfer.files);
+        handleFiles(files);
     });
 </script>
 </body>
